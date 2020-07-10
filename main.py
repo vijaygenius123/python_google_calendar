@@ -5,9 +5,9 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-
+from datetime import datetime, timedelta
 # If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 def main():
     """Shows basic usage of the Google Calendar API.
@@ -34,19 +34,25 @@ def main():
 
     service = build('calendar', 'v3', credentials=creds)
     
-    # Call the Calendar API
-    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    print('Getting the upcoming 10 events')
-    events_result = service.events().list(calendarId='primary', timeMin=now,
-                                        maxResults=10, singleEvents=True,
-                                        orderBy='startTime').execute()
-    events = events_result.get('items', [])
+    start_time = datetime(2020,7,10,23,30,0)
+    end_time = start_time + timedelta(minutes=15)
+    event = {
+        'summary': 'Test Event',
+        'location': 'Home',
+        'description': 'This Is A Test Event',
+        'start': {
+            'dateTime': start_time.strftime('%Y-%m-%dT%H:%M:%S'),
+            'timeZone': 'Asia/Kolkata'
+        },
+        'end': {
+            'dateTime': end_time.strftime('%Y-%m-%dT%H:%M:%S'),
+            'timeZone': 'Asia/Kolkata'
+        }
+    }
 
-    if not events:
-        print('No upcoming events found.')
-    for event in events:
-        start = event['start'].get('dateTime', event['start'].get('date'))
-        print(start, event['summary'])
+    resp = service.events().insert(calendarId='primary',body=event).execute()
+    print(resp)
+
 
 
 if __name__ == '__main__':
